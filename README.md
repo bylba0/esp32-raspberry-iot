@@ -1,19 +1,21 @@
-# 🌡️ IoT Climate Control System
+# 🌡️ Smart Home Climate Monitoring System
 
-Система мониторинга климата в реальном времени. Данные собираются датчиком через ESP32 и визуализируются на веб-панели Raspberry Pi.
+Профессиональная система мониторинга микроклимата на базе ESP32 и Raspberry Pi.
 
-## 🚀 Технологический стек
-* **Hardware:** ESP32 (Client), DHT22 Sensor, Raspberry Pi 4 (Server).
-* **Backend:** Python 3 + Flask.
-* **Frontend:** HTML5, CSS3, JS + **Chart.js** (визуализация графиков).
-* **DevOps:** Управление процессами через `systemd`, контроль версий `Git`.
+## 🚀 Основные возможности
+* **Persistence (БД):** Хранение истории измерений в SQLite (данные не пропадают после перезагрузки).
+* **Dual-Line Analytics:** Интерактивный график (Chart.js) с двумя осями (температура и влажность).
+* **Robustness:** Обработка ошибок связи и автоматическое восстановление сервера через `systemd`.
+* **Real-time:** Частота опроса датчиков — каждые 5-7 секунд.
 
-## 🛠️ Функционал
-- **Real-time Monitoring:** Обновление данных каждые 5-7 секунд.
-- **Data Visualization:** Интерактивный график температуры с историей последних 20 измерений.
-- **Autostart:** Сервер автоматически поднимается при загрузке Raspberry Pi.
+## 🛠️ Технологический стек
+* **Контроллер:** ESP32 (C++, HTTP Client).
+* **Сервер:** Raspberry Pi 4 (Python 3, Flask, SQLite3).
+* **Интерфейс:** HTML5, CSS3 (Modern UI), JavaScript (Chart.js).
+* **DevOps:** Git, Systemd Linux services.
 
-## 📂 Структура проекта
-- `app.py` — Flask-сервер, обрабатывающий JSON-пакеты.
-- `templates/index.html` — Веб-интерфейс с графиками.
-- `smart_home.service` — Конфигурация для системного демона Linux.
+## 📂 Структура
+- `app.py` — серверная логика и API базы данных.
+- `templates/index.html` — дашборд с аналитикой.
+- `climate.db` — (локально) база данных измерений.
+- `smart_home.service` — конфигурация автозапуска.
