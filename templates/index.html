@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Мой Умный Дом</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .value { font-size: 32px; font-weight: bold; color: #007bff; }
+        canvas { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Мониторинг климата</h1>
+        <p>Температура: <span class="value">{{ temp }}°C</span> | Влажность: <span class="value">{{ hum }}%</span></p>
+        
+        <canvas id="tempChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{
+                label: 'Температура (°C)',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                tension: 0.3
+            }] },
+            options: { scales: { y: { beginAtZero: false } } }
+        });
+
+        async function updateChart() {
+            const response = await fetch('/history');
+            const data = await response.json();
+            
+            chart.data.labels = data.map(i => i.time);
+            chart.data.datasets[0].data = data.map(i => i.temp);
+            chart.update();
+        }
+
+        setInterval(updateChart, 5000); // Обновлять график каждые 5 секунд
+        updateChart();
+    </script>
+</body>
+</html>
