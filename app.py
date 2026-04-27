@@ -1,36 +1,53 @@
+import sqlite3
 from flask import Flask, request, render_template, jsonify
 from datetime import datetime
 
 app = Flask(__name__)
 
-# Храним последние 20 записей
-history = []
+# Инициализация базы данных
+def init_db():
+    conn = sqlite3.connect('climate.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS measurements 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  temp REAL, hum REAL, time TEXT)''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 @app.route('/')
 def index():
-    # Берем последнее значение для карточек
-    current = history[-1] if history else {'temp': '--', 'hum': '--', 'time': '--'}
-    return render_template('index.html', **current)
+    return render_template('index.html')
 
 @app.route('/update', methods=['POST'])
 def update():
     data = request.get_json()
-    new_entry = {
-        'temp': data.get('temperature'),
-        'hum': data.get('humidity'),
-        'time': datetime.now().strftime("%H:%M:%S")
-    }
-    history.append(new_entry)
+    temp = data.get('temperature')
+    hum = data.get('humidity')
+    time_now = datetime.now().strftime("%H:%M:%S")
+
+    # Сохраняем в базу
+    conn = sqlite3.connect('climate.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO measurements (temp, hum, time) VALUES (?, ?, ?)", (temp, hum, time_now))
+    conn.commit()
+    conn.close()
     
-    # Чтобы память не резиновая, оставляем только последние 20 точек
-    if len(history) > 20:
-        history.pop(0)
-        
+    print(f"Записано в БД: {temp}C, {hum}%")
     return "OK", 200
 
-# Добавляем маршрут, чтобы фронтенд мог забирать всю историю для графика
 @app.route('/history')
 def get_history():
+    conn = sqlite3.connect('climate.db')
+    c = conn.cursor()
+    # Берем последние 30 записей
+    c.execute("SELECT temp, hum, time FROM measurements ORDER BY id DESC LIMIT 30")
+    rows = c.fetchall()
+    conn.close()
+    
+    # Переворачиваем, чтобы график шел слева направо
+    history = [{"temp": r[0], "hum": r[1], "time": r[2]} for r in rows][::-1]
     return jsonify(history)
 
 if __name__ == '__main__':

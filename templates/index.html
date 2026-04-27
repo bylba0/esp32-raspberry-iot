@@ -1,46 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Мой Умный Дом</title>
+    <title>Умный Дом - Аналитика</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .value { font-size: 32px; font-weight: bold; color: #007bff; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eceff1; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #37474f; }
         canvas { margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Мониторинг климата</h1>
-        <p>Температура: <span class="value">{{ temp }}°C</span> | Влажность: <span class="value">{{ hum }}%</span></p>
-        
-        <canvas id="tempChart"></canvas>
+        <h1>Мониторинг климата (БД активна)</h1>
+        <canvas id="climateChart"></canvas>
     </div>
 
     <script>
-        const ctx = document.getElementById('tempChart').getContext('2d');
+        const ctx = document.getElementById('climateChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{
-                label: 'Температура (°C)',
-                data: [],
-                borderColor: 'rgb(255, 99, 132)',
-                tension: 0.3
-            }] },
-            options: { scales: { y: { beginAtZero: false } } }
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Температура (°C)',
+                        data: [],
+                        borderColor: '#ff5252',
+                        backgroundColor: 'rgba(255, 82, 82, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Влажность (%)',
+                        data: [],
+                        borderColor: '#448aff',
+                        backgroundColor: 'rgba(68, 138, 255, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'Градусы'} },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: {display: true, text: 'Проценты'} }
+                }
+            }
         });
 
         async function updateChart() {
-            const response = await fetch('/history');
-            const data = await response.json();
-            
-            chart.data.labels = data.map(i => i.time);
-            chart.data.datasets[0].data = data.map(i => i.temp);
-            chart.update();
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                
+                chart.data.labels = data.map(i => i.time);
+                chart.data.datasets[0].data = data.map(i => i.temp);
+                chart.data.datasets[1].data = data.map(i => i.hum);
+                chart.update('none'); // 'none' для плавной анимации
+            } catch (e) { console.log("Ошибка обновления:", e); }
         }
 
-        setInterval(updateChart, 5000); // Обновлять график каждые 5 секунд
+        setInterval(updateChart, 5000);
         updateChart();
     </script>
 </body>
